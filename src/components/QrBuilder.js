@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import QRCode from "qrcode";
 import { cn } from "@/lib/utils";
-import { Link as LinkIcon, Wifi, IdCard } from "lucide-react";
+import { Link as LinkIcon, Wifi, IdCard, MessageCircle, Phone } from "lucide-react";
 
 export default function QrBuilder() {
   const [activeTab, setActiveTab] = useState("url");
@@ -15,6 +15,10 @@ export default function QrBuilder() {
     last: "",
     phone: "",
     email: "",
+    waPhone: "",
+    waMessage: "",
+    smsPhone: "",
+    smsMessage: "",
   });
   const [qrDataUrl, setQrDataUrl] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -23,9 +27,14 @@ export default function QrBuilder() {
     { key: "url", label: "URL", icon: LinkIcon },
     { key: "wifi", label: "Wi‑Fi", icon: Wifi },
     { key: "vcard", label: "vCard", icon: IdCard },
+    { key: "whatsapp", label: "WhatsApp", icon: MessageCircle },
+    { key: "sms", label: "SMS", icon: Phone },
   ];
 
   function generateQRData() {
+    function sanitizePhone(p) {
+      return (p || "").replace(/[^\d]/g, "");
+    }
     if (activeTab === "url") {
       return (formData.url || "").trim();
     }
@@ -49,6 +58,16 @@ export default function QrBuilder() {
       ]
         .filter(Boolean)
         .join("\n");
+    }
+    if (activeTab === "whatsapp") {
+      const phone = sanitizePhone(formData.waPhone);
+      const message = encodeURIComponent((formData.waMessage || "").trim());
+      return `https://wa.me/${phone}?text=${message}`;
+    }
+    if (activeTab === "sms") {
+      const phone = sanitizePhone(formData.smsPhone);
+      const message = encodeURIComponent((formData.smsMessage || "").trim());
+      return `sms:${phone}?body=${message}`;
     }
     return "";
   }
@@ -213,6 +232,68 @@ export default function QrBuilder() {
               </div>
               <p className="text-xs text-slate-500">
                 Generates a simple vCard 3.0 with name, phone, and email.
+              </p>
+            </div>
+          )}
+
+          {activeTab === "whatsapp" && (
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-slate-700">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  placeholder="e.g., 905555555555"
+                  value={formData.waPhone}
+                  onChange={(e) => updateField("waPhone", e.target.value)}
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700">
+                  Message
+                </label>
+                <textarea
+                  placeholder="Type your message"
+                  value={formData.waMessage}
+                  onChange={(e) => updateField("waMessage", e.target.value)}
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 h-24 resize-y"
+                />
+              </div>
+              <p className="text-xs text-slate-500">
+                Generates a WhatsApp link using wa.me with your phone and message.
+              </p>
+            </div>
+          )}
+
+          {activeTab === "sms" && (
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-slate-700">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  placeholder="e.g., 905555555555"
+                  value={formData.smsPhone}
+                  onChange={(e) => updateField("smsPhone", e.target.value)}
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700">
+                  Message
+                </label>
+                <textarea
+                  placeholder="Type your SMS body"
+                  value={formData.smsMessage}
+                  onChange={(e) => updateField("smsMessage", e.target.value)}
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 h-24 resize-y"
+                />
+              </div>
+              <p className="text-xs text-slate-500">
+                Generates an SMS link in the format sms:{`{phone}`}?body={`{message}`}.
               </p>
             </div>
           )}
