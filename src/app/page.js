@@ -5,14 +5,14 @@ export default function Home() {
   return (
     <div className="flex flex-col gap-20 pb-20">
       
-      {/* 1. ANA UYGULAMA ALANI */}
-      <section className="mx-auto w-full max-w-6xl">
-        {/* Görünmeyen başlığı sildik, doğrudan uygulamaya odaklanıyoruz */}
+      {/* 1. MAIN APP AREA */}
+      <section className="mx-auto w-full max-w-6xl pt-8 flex flex-col items-center">
         <QrBuilder />
       </section>
 
-      {/* 2. FEATURES BÖLÜMÜ */}
-      <section id="features" className="mx-auto w-full max-w-6xl pt-10 border-t border-slate-900">
+      {/* 2. FEATURES SECTION */}
+      {/* DÜZELTME: scroll-mt-28 sınıfı eklendi. Artık navbar'ın altına girmez. */}
+      <section id="features" className="mx-auto w-full max-w-6xl pt-10 border-t border-slate-900 scroll-mt-28">
         <div className="text-center mb-12">
           <h2 className="text-2xl font-bold text-white mb-4">Why QR Master?</h2>
           <p className="text-slate-400 max-w-2xl mx-auto">
@@ -34,7 +34,7 @@ export default function Home() {
           <FeatureCard 
             icon={Globe} 
             title="Universal" 
-            desc="Create codes for URLs, Wi-Fi, vCards, SMS, and WhatsApp." 
+            desc="Create codes for URLs, Wi-Fi, vCards, Crypto, and more." 
           />
           <FeatureCard 
             icon={Smartphone} 
@@ -44,20 +44,20 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3. HOW IT WORKS BÖLÜMÜ */}
-      <section id="how-it-works" className="mx-auto w-full max-w-4xl pt-10 border-t border-slate-900">
+      {/* 3. HOW IT WORKS SECTION */}
+      {/* DÜZELTME: scroll-mt-28 sınıfı eklendi. */}
+      <section id="how-it-works" className="mx-auto w-full max-w-4xl pt-10 border-t border-slate-900 scroll-mt-28">
          <div className="text-center mb-12">
           <h2 className="text-2xl font-bold text-white mb-4">How it Works</h2>
         </div>
         
         <div className="relative">
-          {/* Çizgi */}
           <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-slate-900 hidden md:block"></div>
           
           <Step 
             num="1" 
             title="Choose Type" 
-            desc="Select what you want to share: a Website, Wi-Fi access, or Contact info." 
+            desc="Select what you want to share: Website, Crypto, Wi-Fi, or Contact info." 
             align="left"
           />
           <Step 
@@ -79,7 +79,6 @@ export default function Home() {
   );
 }
 
-// Yardımcı Bileşenler (Sadece bu dosya içinde kullanılır)
 function FeatureCard({ icon: Icon, title, desc }) {
   return (
     <div className="p-6 rounded-2xl bg-slate-900/50 border border-slate-800 hover:border-indigo-500/50 transition-colors">
