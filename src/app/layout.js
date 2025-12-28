@@ -14,16 +14,18 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "QR Master",
-  description: "Multifunctional QR Code Generator",
+  title: "QR Master - Professional Tool",
+  description: "Generate WhatsApp, SMS, Wi-Fi, and URL QR codes instantly.",
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col bg-gray-50`}>
+    <html lang="en" className="dark">
+      <body className={`${geistSans.variable} ${geistMono.variable} min-h-screen flex flex-col bg-slate-950 text-slate-200`}>
         <Navbar />
-        <main className="flex-1 max-w-5xl mx-auto w-full p-6">{children}</main>
+        <main className="flex-1 w-full max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
+            {children}
+        </main>
         <Footer />
       </body>
     </html>
