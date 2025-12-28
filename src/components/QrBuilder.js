@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import QRCode from "qrcode";
 import { cn } from "@/lib/utils";
-import { Link as LinkIcon, Wifi, IdCard, MessageCircle, Phone, Download, Info } from "lucide-react";
+import { Link as LinkIcon, Wifi, IdCard, MessageCircle, Phone, Download, Info, Mail, Bitcoin, MapPin } from "lucide-react";
 
 export default function QrBuilder() {
   const [activeTab, setActiveTab] = useState("url");
@@ -16,16 +16,23 @@ export default function QrBuilder() {
     last: "",
     phone: "",
     email: "",
+    emailSubject: "",
+    emailBody: "",
     waPhone: "",
     waMessage: "",
     smsPhone: "",
     smsMessage: "",
+    cryptoAddress: "",
+    cryptoAmount: "",
+    cryptoType: "bitcoin",
+    latitude: "",
+    longitude: "",
   });
   
   const [qrDataUrl, setQrDataUrl] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // TABLAR VE AÇIKLAMALARI (Dengeyi sağlamak için burayı doldurduk)
+  // TABLAR VE AÇIKLAMALARI
   const tabs = [
     { 
       key: "url", 
@@ -46,21 +53,42 @@ export default function QrBuilder() {
       label: "vCard", 
       icon: IdCard,
       description: "Share your contact details directly to someone's phone address book.",
-      tips: ["Add your full name and primary phone.", "Email is optional but recommended.", "Great for business cards."]
+      tips: ["Add your full name and primary phone.", "Great for business cards and networking."]
+    },
+    { 
+      key: "email", 
+      label: "Email", 
+      icon: Mail,
+      description: "Pre-write an email with a subject line and body text.",
+      tips: ["Useful for support requests or feedback forms.", "Works with Gmail, Outlook, and Apple Mail."]
     },
     { 
       key: "whatsapp", 
       label: "WhatsApp", 
       icon: MessageCircle,
       description: "Start a WhatsApp chat with a pre-filled message.",
-      tips: ["Include country code (e.g., 90 for TR).", "Pre-filled messages help start the conversation.", "Ideal for customer support."]
+      tips: ["Include country code (e.g., 90).", "Pre-filled messages help start the conversation."]
     },
     { 
       key: "sms", 
       label: "SMS", 
       icon: Phone,
       description: "Compose an SMS message to a specific number.",
-      tips: ["Works on both iOS and Android.", "Standard SMS rates apply to the user.", "Good for simple opt-ins."]
+      tips: ["Works on both iOS and Android.", "Good for simple opt-ins or voting."]
+    },
+    { 
+      key: "crypto", 
+      label: "Crypto", 
+      icon: Bitcoin,
+      description: "Receive crypto payments easily. Supports Bitcoin and Ethereum.",
+      tips: ["Double check your wallet address.", "Compatible with most mobile wallets."]
+    },
+    { 
+      key: "location", 
+      label: "Location", 
+      icon: MapPin,
+      description: "Share a specific geographic coordinate (Google Maps).",
+      tips: ["Use decimal coordinates (e.g., 41.0082).", "Opens directly in Maps apps."]
     },
   ];
 
@@ -68,12 +96,15 @@ export default function QrBuilder() {
     function sanitizePhone(p) {
       return (p || "").replace(/[^\d]/g, "");
     }
+
     if (activeTab === "url") return (formData.url || "").trim();
+    
     if (activeTab === "wifi") {
       const ssid = (formData.ssid || "").trim();
       const password = (formData.password || "").trim();
       return `WIFI:T:WPA;S:${ssid};P:${password};;`;
     }
+    
     if (activeTab === "vcard") {
       const first = (formData.first || "").trim();
       const last = (formData.last || "").trim();
@@ -84,16 +115,47 @@ export default function QrBuilder() {
         phone ? `TEL:${phone}` : "", email ? `EMAIL:${email}` : "", "END:VCARD",
       ].filter(Boolean).join("\n");
     }
+
+    if (activeTab === "email") {
+      const email = (formData.email || "").trim();
+      const subject = encodeURIComponent((formData.emailSubject || "").trim());
+      const body = encodeURIComponent((formData.emailBody || "").trim());
+      return `mailto:${email}?subject=${subject}&body=${body}`;
+    }
+    
     if (activeTab === "whatsapp") {
       const phone = sanitizePhone(formData.waPhone);
       const message = encodeURIComponent((formData.waMessage || "").trim());
       return `https://wa.me/${phone}?text=${message}`;
     }
+    
     if (activeTab === "sms") {
       const phone = sanitizePhone(formData.smsPhone);
       const message = encodeURIComponent((formData.smsMessage || "").trim());
       return `sms:${phone}?body=${message}`;
     }
+
+    if (activeTab === "crypto") {
+      const address = (formData.cryptoAddress || "").trim();
+      const amount = (formData.cryptoAmount || "").trim();
+      const type = formData.cryptoType; // bitcoin or ethereum
+      if (!address) return "";
+      
+      if (type === "ethereum") {
+         return `ethereum:${address}${amount ? `?value=${amount}` : ""}`;
+      }
+      // Default Bitcoin
+      return `bitcoin:${address}${amount ? `?amount=${amount}` : ""}`;
+    }
+
+    if (activeTab === "location") {
+      const lat = (formData.latitude || "").trim();
+      const lng = (formData.longitude || "").trim();
+      if(!lat || !lng) return "";
+      // Google Maps Universal Link
+      return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+    }
+
     return "";
   }
 
@@ -139,7 +201,6 @@ export default function QrBuilder() {
   const inputClass = "w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-200 placeholder:text-slate-600 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all";
   const labelClass = "block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wide";
   
-  // Aktif Tab Bilgilerini Bul
   const currentTabInfo = tabs.find(t => t.key === activeTab);
 
   return (
@@ -181,10 +242,7 @@ export default function QrBuilder() {
 
             <div className="space-y-5">
               {activeTab === "url" && (
-                <div>
-                  <label className={labelClass}>Website URL</label>
-                  <input type="url" placeholder="https://example.com" value={formData.url} onChange={(e) => updateField("url", e.target.value)} className={inputClass} />
-                </div>
+                <div><label className={labelClass}>Website URL</label><input type="url" placeholder="https://example.com" value={formData.url} onChange={(e) => updateField("url", e.target.value)} className={inputClass} /></div>
               )}
 
               {activeTab === "wifi" && (
@@ -196,7 +254,7 @@ export default function QrBuilder() {
 
               {activeTab === "vcard" && (
                 <>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div><label className={labelClass}>First Name</label><input type="text" value={formData.first} onChange={(e) => updateField("first", e.target.value)} className={inputClass} /></div>
                     <div><label className={labelClass}>Last Name</label><input type="text" value={formData.last} onChange={(e) => updateField("last", e.target.value)} className={inputClass} /></div>
                   </div>
@@ -205,10 +263,18 @@ export default function QrBuilder() {
                 </>
               )}
 
+              {activeTab === "email" && (
+                <>
+                  <div><label className={labelClass}>Recipient Email</label><input type="email" placeholder="contact@company.com" value={formData.email} onChange={(e) => updateField("email", e.target.value)} className={inputClass} /></div>
+                  <div><label className={labelClass}>Subject</label><input type="text" placeholder="Inquiry" value={formData.emailSubject} onChange={(e) => updateField("emailSubject", e.target.value)} className={inputClass} /></div>
+                  <div><label className={labelClass}>Body</label><textarea placeholder="Hello..." value={formData.emailBody} onChange={(e) => updateField("emailBody", e.target.value)} className={`${inputClass} h-20 resize-none`} /></div>
+                </>
+              )}
+
               {activeTab === "whatsapp" && (
                 <>
                   <div><label className={labelClass}>WhatsApp Number</label><input type="tel" placeholder="905551234567" value={formData.waPhone} onChange={(e) => updateField("waPhone", e.target.value)} className={inputClass} /></div>
-                  <div><label className={labelClass}>Message</label><textarea placeholder="Hello, I need info..." value={formData.waMessage} onChange={(e) => updateField("waMessage", e.target.value)} className={`${inputClass} h-24 resize-none`} /></div>
+                  <div><label className={labelClass}>Message</label><textarea placeholder="Hello..." value={formData.waMessage} onChange={(e) => updateField("waMessage", e.target.value)} className={`${inputClass} h-24 resize-none`} /></div>
                 </>
               )}
 
@@ -218,21 +284,38 @@ export default function QrBuilder() {
                   <div><label className={labelClass}>Message Body</label><textarea placeholder="Type your SMS..." value={formData.smsMessage} onChange={(e) => updateField("smsMessage", e.target.value)} className={`${inputClass} h-24 resize-none`} /></div>
                 </>
               )}
+
+              {activeTab === "crypto" && (
+                <>
+                  <div className="flex gap-4 mb-2">
+                    <button type="button" onClick={() => updateField("cryptoType", "bitcoin")} className={cn("flex-1 py-2 rounded-lg text-sm font-medium border transition-colors", formData.cryptoType === "bitcoin" ? "bg-orange-500/20 border-orange-500 text-orange-400" : "bg-slate-900 border-slate-700 text-slate-400")}>Bitcoin</button>
+                    <button type="button" onClick={() => updateField("cryptoType", "ethereum")} className={cn("flex-1 py-2 rounded-lg text-sm font-medium border transition-colors", formData.cryptoType === "ethereum" ? "bg-blue-500/20 border-blue-500 text-blue-400" : "bg-slate-900 border-slate-700 text-slate-400")}>Ethereum</button>
+                  </div>
+                  <div><label className={labelClass}>Wallet Address</label><input type="text" placeholder={formData.cryptoType === 'bitcoin' ? "bc1qxy..." : "0x71C..."} value={formData.cryptoAddress} onChange={(e) => updateField("cryptoAddress", e.target.value)} className={inputClass} /></div>
+                  <div><label className={labelClass}>Amount (Optional)</label><input type="number" step="0.0001" placeholder="0.05" value={formData.cryptoAmount} onChange={(e) => updateField("cryptoAmount", e.target.value)} className={inputClass} /></div>
+                </>
+              )}
+
+              {activeTab === "location" && (
+                <>
+                   <div className="grid grid-cols-2 gap-4">
+                    <div><label className={labelClass}>Latitude</label><input type="text" placeholder="41.0082" value={formData.latitude} onChange={(e) => updateField("latitude", e.target.value)} className={inputClass} /></div>
+                    <div><label className={labelClass}>Longitude</label><input type="text" placeholder="28.9784" value={formData.longitude} onChange={(e) => updateField("longitude", e.target.value)} className={inputClass} /></div>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">Find coordinates on Google Maps by right-clicking a location.</p>
+                </>
+              )}
             </div>
 
-            {/* BİLGİ KUTUSU (BOŞLUĞU DOLDURUR) */}
+            {/* BİLGİ KUTUSU */}
             <div className="mt-8 pt-6 border-t border-slate-800">
                 <div className="flex items-start gap-3">
                     <Info className="text-indigo-400 mt-1 shrink-0" size={18} />
                     <div>
                         <h3 className="text-sm font-medium text-slate-200 mb-1">About {currentTabInfo?.label} QR</h3>
-                        <p className="text-xs text-slate-400 leading-relaxed mb-3">
-                            {currentTabInfo?.description}
-                        </p>
+                        <p className="text-xs text-slate-400 leading-relaxed mb-3">{currentTabInfo?.description}</p>
                         <ul className="text-xs text-slate-500 list-disc list-inside space-y-1">
-                            {currentTabInfo?.tips.map((tip, i) => (
-                                <li key={i}>{tip}</li>
-                            ))}
+                            {currentTabInfo?.tips.map((tip, i) => <li key={i}>{tip}</li>)}
                         </ul>
                     </div>
                 </div>
@@ -257,12 +340,7 @@ export default function QrBuilder() {
               )}
             </div>
 
-            <button
-              type="button"
-              onClick={downloadPng}
-              disabled={!qrDataUrl}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-4 text-base font-semibold text-white transition-all hover:bg-indigo-500 hover:shadow-lg hover:shadow-indigo-500/25 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+            <button type="button" onClick={downloadPng} disabled={!qrDataUrl} className="w-full flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-4 text-base font-semibold text-white transition-all hover:bg-indigo-500 hover:shadow-lg hover:shadow-indigo-500/25 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
               <Download size={20} />
               Download PNG
             </button>
