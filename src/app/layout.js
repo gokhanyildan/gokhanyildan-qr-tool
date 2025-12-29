@@ -13,11 +13,33 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// BURASI ÖNEMLİ: Tarayıcı sekmesinde ismin yazacak
 export const metadata = {
   title: "QR Master by Gökhan Yıldan | Free QR Code Generator",
   description: "Generate WhatsApp, SMS, Crypto, and URL QR codes instantly. Professional tool developed by Gökhan Yıldan.",
   authors: [{ name: "Gökhan Yıldan", url: "https://www.gokhanyildan.com" }],
+  
+  // --- CRITICAL SEO SETTINGS START ---
+  
+  // 1. Define the base URL. This resolves relative paths for OG images and canonicals.
+  metadataBase: new URL('https://tools.gokhanyildan.com'),
+
+  // 2. Canonical tag to prevent Duplicate Content issues.
+  // Since your app is under a subdirectory, this ensures Google knows the correct path.
+  alternates: {
+    canonical: '/qr-generator', // Resolves to: https://tools.gokhanyildan.com/qr-generator
+  },
+
+  // 3. (Optional but Recommended) Open Graph for better social media sharing (LinkedIn/Twitter).
+  openGraph: {
+    title: "QR Master - Free & Secure QR Generator",
+    description: "Create custom QR codes for WiFi, VCard, and URLs instantly.",
+    url: '/qr-generator',
+    siteName: 'Gokhan Yildan Tools',
+    locale: 'en_US',
+    type: 'website',
+  },
+  
+  // --- CRITICAL SEO SETTINGS END ---
 };
 
 export default function RootLayout({ children }) {
